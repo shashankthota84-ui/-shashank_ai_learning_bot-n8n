@@ -1,0 +1,160 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "577ded94-ac6c-4717-9347-3c7ce2d9c1f6",
+      "name": "Telegram Trigger",
+      "webhookId": "fcb31d65-4144-4757-a275-ffb98c31a852",
+      "credentials": {
+        "telegramApi": {
+          "id": "PvdnUSnhkYgNPbWk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "{{$json.message.text}}",
+        "options": {
+          "systemMessage": "You are an AI Quiz Battle Bot for students.\n\nUser message:\n{{$json.message.text}}\n\nInitial welcome message:\n\"👋 Welcome to AI Fun Learning Bot!\n\nChoose a mode:\n1. Type 'quiz python' for Python quiz\n2. Type 'quiz javascript' for JavaScript quiz\n3. Type 'quiz react' for React quiz\n4. Type 'meme coding' for coding meme\n5. Type 'roast me' for friendly roast\n6. Type 'end' anytime to stop and return here\"\n\nRules:\n\n1. If user says \"start\", \"/start\", \"hello\", \"hi\", or \"end\":\n- Stop the current mode.\n- Show only the Initial welcome message.\n- Do not ask a quiz question.\n\n2. If user says \"quiz\", \"/quiz\", \"quiz python\", \"quiz javascript\", \"quiz react\", \"quiz html\", \"quiz css\", or \"quiz sql\":\n- Start Quiz Battle Mode.\n- Ask exactly ONE multiple-choice question.\n- Give options A, B, C, D.\n- Do NOT reveal the correct answer yet.\n- End with: \"Reply with A, B, C, or D. Type 'end' to stop.\"\n\n3. If previous message was a quiz question and user replies A, B, C, or D:\n- Check the user's answer with the previous quiz question.\n- Say whether it is Correct or Wrong.\n- Give the correct answer.\n- Give a short explanation.\n- Give score out of 10.\n- Ask: \"Want next question? Type quiz. Type 'end' to stop.\"\n\n4. If user sends code or error:\n- Explain the error simply.\n- Give corrected code if possible.\n- Give one viva question.\n- End with: \"Type 'end' to go back to menu.\"\n\n5. If user asks meme:\n- Generate one funny coding meme caption.\n- End with: \"Type 'end' to go back to menu.\"\n\n6. If user asks roast:\n- Give only a friendly, safe roast.\n- End with: \"Type 'end' to go back to menu.\"\n\nKeep replies short, clear, and student-friendly."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f25a0879-9497-43e6-bb9f-db881929da8c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "a023843f-aef4-48e7-bb2c-cec0b0d2ecac",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "5gacSJb8sfUUAF1M",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{$node[\"Telegram Trigger\"].json[\"message\"][\"chat\"][\"id\"]}}",
+        "text": "={{$json.output}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "0bfd3e7d-2e8a-4ac9-a1e7-0f4dc48259c7",
+      "name": "Send a text message",
+      "webhookId": "645c1d63-4595-426a-9a38-65ec84d8a320",
+      "credentials": {
+        "telegramApi": {
+          "id": "PvdnUSnhkYgNPbWk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        208
+      ],
+      "id": "c870c9eb-def3-4fcc-913a-9ed4d3354eb9",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3d8a8bf9-3ba5-44af-abee-6779b7250c29",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "feaa11c3600422d9cf104e8b47fbdcaa66b1073aec53de1cadeedff26e667d03"
+  },
+  "id": "BTE8ZzlSZTKRdkk6",
+  "tags": []
+}
